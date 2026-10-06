@@ -7,8 +7,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const srn = String(body.srn || "").trim().toUpperCase();
     const fullName = String(body.fullName ?? "");
-    if (!/^[A-Z0-9]{6,24}$/.test(srn) || fullName.trim().length < 2 || fullName.length > 120) {
-      return NextResponse.json({ error: "Enter a valid SRN and your full name." }, { status: 400 });
+    if (!/^[A-Z0-9]{13}$/.test(srn)) {
+      return NextResponse.json({ error: "SRN must be exactly 13 letters or numbers." }, { status: 400 });
+    }
+    if (fullName.trim().length < 2 || fullName.length > 120) {
+      return NextResponse.json({ error: "Enter your full name (2–120 characters)." }, { status: 400 });
     }
     const supabase = createServiceClient();
     const { data: candidateId, error } = await supabase.rpc("register_appex_candidate", { p_srn: srn, p_full_name: fullName });

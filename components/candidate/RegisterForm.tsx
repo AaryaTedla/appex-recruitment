@@ -43,7 +43,7 @@ export function RegisterForm() {
     <form onSubmit={submit} className="space-y-5">
       <div>
         <label htmlFor="srn" className="mb-2 block text-sm font-medium text-zinc-300">SRN</label>
-        <Input id="srn" value={srn} onChange={(e) => setSrn(e.target.value.toUpperCase())} placeholder="SRN" autoComplete="off" autoCapitalize="characters" spellCheck={false} minLength={6} maxLength={24} required />
+        <Input id="srn" value={srn} onChange={(e) => setSrn(e.target.value.toUpperCase())} placeholder="SRN" autoComplete="off" autoCapitalize="characters" spellCheck={false} minLength={13} maxLength={13} required />
       </div>
       <div>
         <label htmlFor="fullName" className="mb-2 block text-sm font-medium text-zinc-300">Full Name</label>
