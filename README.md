@@ -151,13 +151,13 @@ Important: `SUPABASE_SERVICE_ROLE_KEY` is a server secret. Never prefix it with 
 
 ## 5. Supabase setup
 
-**Existing project:** run only `supabase/migrations/002_hardening.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
+**Existing project:** apply any missing migrations in order: `002_hardening.sql`, `003_update_rahul_email.sql`, then `004_online_registration.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
 
 1. Create a new Supabase project.
 2. Open **SQL Editor**.
 3. Run `supabase/migrations/001_initial_schema.sql`.
 4. Run `supabase/seed.sql`.
-   Then run `supabase/migrations/002_hardening.sql`.
+   Then run migrations `002_hardening.sql`, `003_update_rahul_email.sql`, and `004_online_registration.sql` in order.
 5. In **Project Settings → API**, copy the project URL, anon/public key, and service-role key into `.env.local`.
 6. In **Authentication**, keep email/password auth enabled for evaluator accounts.
 7. Do not enable public candidate sign-up through the evaluator login. Candidate registration is handled separately by the app.
@@ -335,3 +335,16 @@ bash scripts/check-db.sh
 ```
 
 This requires PostgreSQL locally (including `pg_config` and `initdb`). It does not connect to Supabase or read `.env.local`. The checks cover database permissions, atomic registration and session replacement, question history, duplicate submission, scoring, deadlines, and rollback after an invalid evaluation. Never run the test fixture SQL against your live Supabase project.
+
+
+## Registration status and navigation
+
+Applicants must choose whether they have already filled the online form. A No answer shows [the registration link](https://rahulfye.github.io/appex-recruitment/) but still allows taking the test. This is self-reported, not verified against Google. Existing candidates show Unknown; returning candidates can update their answer without creating another attempt.
+
+**Before starting this version:** run `supabase/migrations/004_online_registration.sql` after migration 003. It preserves existing records, replaces the registration RPC with a service-only three-argument version, adds the review-view status, and supplies global question totals. Do not rerun the initial schema or seed on an existing database. Deploy the app after the migration; pause registration during this short coordinated update because the old RPC signature is removed.
+
+Candidates, evaluations, and questions show 25 items per page. Filters remain in the URL; pages beyond the last page redirect to the last valid page. The question bank totals always cover the entire bank.
+
+For performance diagnosis, start the server with `APPEX_PERF_TRACE=1`. Logs separate middleware authentication, page authentication, and database requests. Logs contain labels and timings only. Leave this option off for normal use. Production running: `npm run build`, then `npm start`.
+
+See `IMPLEMENTATION.md` for verification results and measured timings.

@@ -45,9 +45,9 @@ const blank = {
   sort_order: "15",
 };
 
-export function QuestionManager({ questions }: { questions: QuestionRow[] }) {
+export function QuestionManager({ questions, stats }: { questions: QuestionRow[]; stats: { activeCount: number; activePoints: number; nextOrder: number } }) {
   const router = useRouter();
-  const nextOrder = Math.max(0, ...questions.map((question) => question.sort_order)) + 1;
+  const nextOrder = stats.nextOrder;
   const emptyForm = () => ({ ...blank, sort_order: String(nextOrder) });
   const [form, setForm] = useState(emptyForm);
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
@@ -123,13 +123,12 @@ export function QuestionManager({ questions }: { questions: QuestionRow[] }) {
     }
   }
 
-  const activeQuestions = questions.filter((question) => question.is_active);
-  const activePoints = activeQuestions.reduce((sum, question) => sum + Number(question.points), 0);
+  const activePoints = stats.activePoints;
 
   return (
     <div>
       <div className="mb-5 flex flex-wrap gap-3 text-xs text-zinc-500">
-        <span className="rounded-full border border-line px-3 py-1.5">Active: {activeQuestions.length} questions</span>
+        <span className="rounded-full border border-line px-3 py-1.5">Active: {stats.activeCount} questions</span>
         <span className={`rounded-full border px-3 py-1.5 ${activePoints === 100 ? "border-emerald-500/30 text-emerald-300" : "border-amber-500/30 text-amber-300"}`}>Active points: {activePoints} / 100</span>
       </div>
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">

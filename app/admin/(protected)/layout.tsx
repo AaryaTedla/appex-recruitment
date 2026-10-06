@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AdminNavigation, AdminContent } from "@/components/admin/AdminNavigation";
 import { Header } from "@/components/ui/Header";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { requireEvaluator } from "@/lib/auth/admin";
@@ -7,10 +8,10 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   const identity = await requireEvaluator();
 
   return (
-    <div className="min-h-screen">
+    <AdminNavigation><div className="min-h-screen">
       <Header admin />
       <AdminNav role={identity.role} />
-      {children}
-    </div>
+      <AdminContent>{children}</AdminContent>
+    </div></AdminNavigation>
   );
 }

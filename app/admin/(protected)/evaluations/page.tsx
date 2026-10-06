@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirectToValidPage } from "@/lib/pagination";
 import { Card } from "@/components/ui/Card";
 import { requireEvaluator } from "@/lib/auth/admin";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -16,9 +17,10 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
     .from("candidate_review_rows")
     .select("id,srn,full_name,evaluated,recommendation,submitted_at", { count: "exact" })
     .in("attempt_status", ["submitted", "time_expired"])
-    .order("submitted_at", { ascending: false }).range((page - 1) * 50, page * 50 - 1);
+    .order("submitted_at", { ascending: false }).order("id").range((page - 1) * 25, page * 25 - 1);
   if (error) throw new Error("Could not load submitted attempts.");
 
+  redirectToValidPage("/admin/evaluations", params, page, count || 0);
   const rows = data || [];
   return (
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -36,7 +38,7 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
                   </div>
                   <div className={`rounded-full px-3 py-1 text-xs font-medium ${row.evaluated ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}`}>{row.evaluated ? "Evaluated" : "Pending"}</div>
                   <div className="w-40 text-sm text-zinc-500">{row.recommendation || "—"}</div>
-                  <Link href={`/admin/candidates/${row.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-violet-300">Review →</Link>
+                  <Link prefetch={false} href={`/admin/candidates/${row.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-violet-300">Review →</Link>
                 </div>
               );
             })}

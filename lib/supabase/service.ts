@@ -1,3 +1,4 @@
+import { timedServiceFetch } from "@/lib/performance";
 import { createClient } from "@supabase/supabase-js";
 
 export function createServiceClient() {
@@ -9,6 +10,7 @@ export function createServiceClient() {
   }
 
   return createClient(url, key, {
+    global: { fetch: timedServiceFetch },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

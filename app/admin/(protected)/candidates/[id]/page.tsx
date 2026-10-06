@@ -16,7 +16,7 @@ export default async function CandidateDetailPage({ params }: { params: Promise<
 
   const { data: candidate, error } = await supabase
     .from("candidates")
-    .select("id,srn,full_name,status,created_at,attempts(id,status,started_at,submitted_at,objective_score,final_score,answers(id,answer_text,auto_score,manual_score,questions(id,category,type,question_text,code_snippet,points,sort_order),answer_evaluations(criteria,comments)),evaluations(id,score,comments,recommendation,evaluator_id,updated_at),integrity_events(id,event_type,created_at))")
+    .select("id,srn,full_name,status,created_at,online_registration_confirmed,attempts(id,status,started_at,submitted_at,objective_score,final_score,answers(id,answer_text,auto_score,manual_score,questions(id,category,type,question_text,code_snippet,points,sort_order),answer_evaluations(criteria,comments)),evaluations(id,score,comments,recommendation,evaluator_id,updated_at),integrity_events(id,event_type,created_at))")
     .eq("id", id)
     .maybeSingle();
 
@@ -62,6 +62,7 @@ export default async function CandidateDetailPage({ params }: { params: Promise<
         </div>
         <div className="text-right text-sm text-zinc-400">
           <div>Status: <strong className="text-zinc-100">{attempt.status === "time_expired" ? "time_expired" : candidate.status}</strong></div>
+          <div className="mt-1">Online form: <strong className="text-zinc-100">{candidate.online_registration_confirmed == null ? "Unknown" : candidate.online_registration_confirmed ? "Yes" : "No"}</strong> <span className="text-xs">(self-reported)</span></div>
           <div className="mt-1">Objective score: <strong className="text-zinc-100">{formatScore(attempt.objective_score)} / {formatScore(objectiveMax)}</strong></div>
         </div>
       </div>

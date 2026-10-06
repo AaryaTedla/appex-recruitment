@@ -93,7 +93,6 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Submission failed.");
       router.replace("/challenge/complete");
-      router.refresh();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Could not submit. Please try again.");
       submittingRef.current = false;

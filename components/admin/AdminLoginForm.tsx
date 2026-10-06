@@ -45,6 +45,7 @@ export function AdminLoginForm() {
       }
 
       router.replace("/admin");
+      // Auth cookie changes must invalidate previously cached protected pages.
       router.refresh();
     } catch {
       setError("Could not connect. Please try signing in again.");

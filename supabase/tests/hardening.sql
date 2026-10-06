@@ -33,10 +33,10 @@ begin
  update public.questions set points=3 where sort_order=14;
  insert into public.questions(id,category,type,question_text,options,correct_answer,points,sort_order)
  values('00000000-0000-0000-0000-000000000015','python_programming','code_output','Case-sensitive output','["True","true"]','True',1,15);
- c := public.register_appex_candidate('TEST0001',' Test Candidate ');
- if c <> public.register_appex_candidate('TEST0001','test candidate') then raise exception 'Duplicate attempt created'; end if;
+ c := public.register_appex_candidate('TEST000000001',' Test Candidate ',true);
+ if c <> public.register_appex_candidate('TEST000000001','test candidate',true) then raise exception 'Duplicate attempt created'; end if;
  failed:=false;
- begin perform public.register_appex_candidate('TEST0001','Wrong name'); exception when others then failed:=true; end;
+ begin perform public.register_appex_candidate('TEST000000001','Wrong name',true); exception when others then failed:=true; end;
  if not failed then raise exception 'Name mismatch accepted'; end if;
  perform public.replace_appex_session(c,'hash1',now()+interval '1 day');
  perform public.replace_appex_session(c,'hash2',now()+interval '1 day');
@@ -78,19 +78,19 @@ begin
  failed:=false;
  begin update public.questions set question_text='Historical edit' where sort_order=1; exception when others then failed:=true; end;
  if not failed then raise exception 'Historical edit accepted'; end if;
- c := public.register_appex_candidate('TEST0002','Timeout Candidate');
+ c := public.register_appex_candidate('TEST000000002','Timeout Candidate',true);
  perform public.start_appex_attempt(c,1,true);
  select id into a2 from public.attempts where candidate_id=c;
  update public.attempts set started_at=now()-interval '2 minutes' where id=a2;
  result:=public.finalize_appex_attempt(a2,'{"00000000-0000-0000-0000-000000000001":"9"}');
  if result->>'status' <> 'time_expired' or (select objective_score from public.attempts where id=a2) <> 0 then raise exception 'Late answers scored'; end if;
- c := public.register_appex_candidate('TEST0003','Abandoned Candidate');
+ c := public.register_appex_candidate('TEST000000003','Abandoned Candidate',true);
  perform public.start_appex_attempt(c,1,true);
  update public.attempts set started_at=now()-interval '2 minutes' where candidate_id=c;
  update public.questions set is_active=false where sort_order=1;
  if (select status from public.attempts where candidate_id=c) <> 'time_expired' then raise exception 'Abandoned attempt blocks bank'; end if;
  update public.questions set is_active=false;
- c := public.register_appex_candidate('TEST0004','Empty Bank');
+ c := public.register_appex_candidate('TEST000000004','Empty Bank',true);
  failed:=false;
  begin perform public.start_appex_attempt(c,15,true); exception when others then failed:=true; end;
  if not failed or (select started_at from public.attempts where candidate_id=c) is not null then raise exception 'Empty bank started timer'; end if;

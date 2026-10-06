@@ -1,10 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 export default function Loading() {
-  return (
-    <div id="main-content" tabIndex={-1} role="status" className="grid min-h-screen place-items-center px-6">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-7 w-7 animate-spin rounded-full border-2 border-zinc-700 border-t-violet-400" />
-        <p className="text-sm text-zinc-500">Loading APPEX…</p>
-      </div>
-    </div>
-  );
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const timer = setTimeout(() => setVisible(true), 200); return () => clearTimeout(timer); }, []);
+  return <div id="main-content" tabIndex={-1} role="status" className="mx-auto min-h-[50vh] max-w-6xl px-5 py-10 sm:px-8"><span className={visible ? "text-sm text-zinc-400" : "sr-only"}>Loading APPEX…</span></div>;
 }

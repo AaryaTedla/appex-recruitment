@@ -14,5 +14,9 @@ trap '"$task_bin/pg_ctl" -D "$task_dir/data" -m immediate stop >/dev/null 2>&1 |
   -f "$task_root/supabase/seed.sql" \
   -f "$task_root/supabase/migrations/002_hardening.sql" \
   -f "$task_root/supabase/migrations/002_hardening.sql" \
-  -f "$task_root/supabase/tests/hardening.sql"
+  -f "$task_root/supabase/migrations/003_update_rahul_email.sql" \
+  -f "$task_root/supabase/migrations/004_online_registration.sql" \
+  -f "$task_root/supabase/migrations/004_online_registration.sql" \
+  -f "$task_root/supabase/tests/hardening.sql" \
+  -f "$task_root/supabase/tests/online_registration.sql"
 echo "Database integration checks passed. Temporary files: $task_dir"

@@ -1,14 +1,17 @@
 import { redirect } from "next/navigation";
+import { timed } from "@/lib/performance";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isAllowedAdminEmail } from "@/lib/auth/adminAllowlist";
 import type { UserRole } from "@/types";
 
-export async function getAdminIdentity() {
+// Share identity checks between the layout and page within this render only.
+export const getAdminIdentity = cache(async function getAdminIdentity() {
   const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await timed("page authentication", () => supabase.auth.getUser());
 
   if (!user || !isAllowedAdminEmail(user.email)) return null;
 
@@ -26,7 +29,7 @@ export async function getAdminIdentity() {
     user,
     role: profile.role as UserRole,
   };
-}
+});
 
 export async function requireEvaluator() {
   const identity = await getAdminIdentity();

@@ -1,3 +1,4 @@
+import { timed } from "@/lib/performance";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -27,7 +28,7 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await timed("middleware authentication", () => supabase.auth.getUser());
 
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   if (isAdminRoute && request.nextUrl.pathname !== "/admin/login" && !user) {
