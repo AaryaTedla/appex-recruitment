@@ -151,13 +151,13 @@ Important: `SUPABASE_SERVICE_ROLE_KEY` is a server secret. Never prefix it with 
 
 ## 5. Supabase setup
 
-**Existing project:** apply any missing migrations in order: `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, then `005_test_bank.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
+**Existing project:** apply any missing migrations in order: `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, `005_test_bank.sql`, then `006_easier_test_bank.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
 
 1. Create a new Supabase project.
 2. Open **SQL Editor**.
 3. Run `supabase/migrations/001_initial_schema.sql`.
 4. Run `supabase/seed.sql`.
-   Then run migrations `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, and `005_test_bank.sql` in order.
+   Then run migrations `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, `005_test_bank.sql`, and `006_easier_test_bank.sql` in order.
 5. In **Project Settings → API**, copy the project URL, anon/public key, and service-role key into `.env.local`.
 6. In **Authentication**, keep email/password auth enabled for evaluator accounts.
 7. Do not enable public candidate sign-up through the evaluator login. Candidate registration is handled separately by the app.
@@ -358,7 +358,7 @@ Set `NEXT_PUBLIC_CHALLENGE_MINUTES=30` in local and hosting environments, then r
 
 Evaluators can open **`/admin/answer-key`** for correct answers, explanations, and short task scoring guidance. Candidate bootstrap responses exclude both correct answers and evaluator notes. Save & next candidate, recommendations, and optional comments remain available.
 
-The canonical bank is `supabase/question_bank_005.json`. After editing it, regenerate the fresh-install seed and migration bank section:
+The current bank is `supabase/question_bank_006.json`. After editing it, regenerate the fresh-install seed and migration bank section:
 
 ```bash
 python3 scripts/generate-question-bank.py
@@ -371,3 +371,12 @@ npm run build
 ```
 
 The database checks use a temporary local PostgreSQL instance, not your configured Supabase project. They cover bank composition, reapplication, active-test rejection, historical preservation, 30-minute new starts, long-answer persistence, scoring, and permissions.
+
+
+## Easier bank update (006)
+
+Apply `supabase/migrations/006_easier_test_bank.sql` after 005 for the easier version: 14 easy and 6 medium MCQs, with simpler wording, arithmetic, probability and planning prompts. The two descriptive tasks use clearer numbered instructions. The bank remains 22 questions and 100 points. The migration preserves earlier bank records and refuses changes during running tests.
+
+New starts now use a fixed 30-minute application configuration, so a stale environment value of 15 cannot shorten new tests. Restart the development server or redeploy to load this change. Previously started attempts still retain their stored duration; clearing test candidates as described resets those attempts. The 15-minute deadline inside descriptive task 2 is a scenario constraint, not the test duration.
+
+For a fresh installation, run the current seed and all migrations through 006. Existing installations should apply 006, not rerun the seed. `generate-question-bank.py` and `verify-question-bank.py` default to version 006; use `--version 005` to check the preserved earlier version.

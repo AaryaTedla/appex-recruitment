@@ -7,14 +7,19 @@ import json
 from collections import Counter
 from pathlib import Path
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--check', action='store_true')
+parser.add_argument('--version', choices=['005', '006'], default='006')
+args = parser.parse_args()
+version = args.version
 root = Path(__file__).resolve().parents[1]
-bank = json.loads((root / 'supabase/question_bank_005.json').read_text())
+bank = json.loads((root / f'supabase/question_bank_{version}.json').read_text())
 objective = [q for q in bank if q['type'] in ('mcq', 'code_output', 'scenario_mcq', 'true_false')]
 assert len(bank) == 22 and len(objective) == 20
 assert sum(q['points'] for q in bank) == 100
 assert len({q['id'] for q in bank}) == len(bank)
 assert [q['sort_order'] for q in bank] == list(range(1, 23))
-assert Counter(q['difficulty'] for q in objective) == {'easy': 10, 'medium': 10}
+assert Counter(q['difficulty'] for q in objective) == ({'easy': 10, 'medium': 10} if version == '005' else {'easy': 14, 'medium': 6})
 assert Counter(q['category'] for q in objective) == {'python_programming': 4, 'computer_technology': 4, 'aptitude_patterns': 4, 'situational_decision': 4, 'commitment_reliability': 2, 'wildcard': 2}
 for q in objective:
     assert q['points'] == 4 and len(q['options']) == len(set(q['options'])) == 4
@@ -51,17 +56,18 @@ insert into public.questions (''' + ', '.join(fields) + ''')
 select ''' + ', '.join('false' if k == 'is_active' else k for k in fields) + ''' from appex_bank_005 on conflict (id) do nothing;
 update public.questions set is_active=true where id in (select id from appex_bank_005);
 '''
-migration_path = root / 'supabase/migrations/005_test_bank.sql'
+stage = stage.replace('appex_bank_005', f'appex_bank_{version}').replace('$bank005$', f'$bank{version}$').replace('Bank 005', f'Bank {version}')
+seed = seed.replace('migration 005', 'migration 006')
+migration_path = root / ('supabase/migrations/005_test_bank.sql' if version == '005' else 'supabase/migrations/006_easier_test_bank.sql')
 current = migration_path.read_text()
-start = '-- BEGIN GENERATED BANK 005\n'
-end = '-- END GENERATED BANK 005'
+start = f'-- BEGIN GENERATED BANK {version}\n'
+end = f'-- END GENERATED BANK {version}'
 new = current.split(start)[0] + start + stage + end + current.split(end)[1]
-check = argparse.ArgumentParser()
-check.add_argument('--check', action='store_true')
-args = check.parse_args()
-for path, content in [(root / 'supabase/seed.sql', seed), (migration_path, new)]:
+outputs = [(migration_path, new)]
+if version == '006': outputs.append((root / 'supabase/seed.sql', seed))
+for path, content in outputs:
     if args.check:
         assert path.read_text() == content, f'{path.name} differs from generated content'
     else:
         path.write_text(content)
-print('Bank verified: 20 objective + 2 descriptive, 100 points, 10 easy/10 medium MCQs, 5 correct answers per option position.')
+print('Bank verified: 20 objective + 2 descriptive, 100 points, balanced option positions; difficulty mix checked, 5 correct answers per option position.')

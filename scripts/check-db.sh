@@ -41,4 +41,9 @@ if ! rg -q QUESTION_BANK_IN_USE "$task_dir/rejection.log"; then cat "$task_dir/r
   -f "$task_root/supabase/migrations/003_update_rahul_email.sql" \
   -f "$task_root/supabase/migrations/004_online_registration.sql" \
   -f "$task_root/supabase/migrations/005_test_bank.sql"
+
+"$task_bin/psql" -h "$task_dir" -p 55439 -d fresh -v ON_ERROR_STOP=1 \
+  -f "$task_root/supabase/migrations/006_easier_test_bank.sql" \
+  -f "$task_root/supabase/migrations/006_easier_test_bank.sql" \
+  -f "$task_root/supabase/tests/bank_006.sql"
 echo "Database integration checks passed. Temporary files: $task_dir"
