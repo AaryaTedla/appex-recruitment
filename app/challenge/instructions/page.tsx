@@ -29,7 +29,9 @@ export default async function InstructionsPage({ searchParams }: { searchParams:
         <p className="mt-3 text-zinc-400">{timer.enabled ? `You have ${timer.minutes} minutes. The timer starts only when you begin.` : "Take your time. This round has no time limit."}</p>
         <Card className="mt-8 p-6">
           <div className="space-y-5 text-sm leading-6 text-zinc-300">
-            <div><strong className="text-zinc-100">{count || 0} questions.</strong> Programming, technology, aptitude, team situations, problem solving, commitment, and a few wildcards.</div>
+            <div><strong className="text-zinc-100">MCQs: 20 questions</strong> · suggested 12 minutes</div>
+            <div><strong className="text-zinc-100">Descriptive: 2 questions</strong> · suggested 18 minutes</div>
+            <div>One shared timer. You can switch sections anytime. Save enough time for the two written answers.</div>
             <div><strong className="text-zinc-100">Answers autosave.</strong> Refreshing the page should restore what reached the server.</div>
             <div><strong className="text-zinc-100">Stay on this page.</strong> Tab switches and window blur events are logged as basic integrity signals. One accidental event will not disqualify you.</div>
             <div><strong className="text-zinc-100">Review before submitting.</strong> You can revisit any question until the attempt is submitted.</div>

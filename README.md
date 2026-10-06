@@ -380,3 +380,12 @@ Apply `supabase/migrations/006_easier_test_bank.sql` after 005 for the easier ve
 New starts now use a fixed 30-minute application configuration, so a stale environment value of 15 cannot shorten new tests. Restart the development server or redeploy to load this change. Previously started attempts still retain their stored duration; clearing test candidates as described resets those attempts. The 15-minute deadline inside descriptive task 2 is a scenario constraint, not the test duration.
 
 For a fresh installation, run the current seed and all migrations through 006. Existing installations should apply 006, not rerun the seed. `generate-question-bank.py` and `verify-question-bank.py` default to version 006; use `--version 005` to check the preserved earlier version.
+
+
+## Test sections and question 4 update (007)
+
+Apply `supabase/migrations/007_simple_question.sql` after 006, then restart/redeploy. It replaces question 4 with basic Python addition using a new ID, preserving the previous question and all answers. Reapplication is safe; running tests block bank changes. Do not rerun earlier bank migrations after 007, because they would reactivate earlier versions.
+
+Candidates see labeled MCQ/descriptive sections, separate navigator groups and review groups, answered counts, and suggested 12/18-minute pacing. A single 30-minute timer continues across section switching. After 12 minutes, a dismissible reminder appears if either descriptive answer is blank. Dismissal is saved per attempt in this browser; if browser storage is unavailable, dismissal lasts until reload. Both sections stay accessible until submission.
+
+The current source is `supabase/question_bank_007.json`. Generator and independent answer checks default to 007; older source versions remain available with `--version 005` or `--version 006`. Fresh installs use the current seed and migrations through 007; existing installations use migration 007.

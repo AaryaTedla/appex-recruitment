@@ -8,7 +8,7 @@ from fractions import Fraction
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--version', choices=['005', '006'], default='006')
+parser.add_argument('--version', choices=['005', '006', '007'], default='007')
 args = parser.parse_args()
 bank = json.loads((Path(__file__).resolve().parents[1] / f'supabase/question_bank_{args.version}.json').read_text())
 for q in bank[:4]:

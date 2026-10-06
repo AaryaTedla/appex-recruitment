@@ -46,4 +46,14 @@ if ! rg -q QUESTION_BANK_IN_USE "$task_dir/rejection.log"; then cat "$task_dir/r
   -f "$task_root/supabase/migrations/006_easier_test_bank.sql" \
   -f "$task_root/supabase/migrations/006_easier_test_bank.sql" \
   -f "$task_root/supabase/tests/bank_006.sql"
+"$task_bin/psql" -h "$task_dir" -p 55439 -d fresh -v ON_ERROR_STOP=1 -f "$task_root/supabase/tests/bank_007_prepare.sql"
+if "$task_bin/psql" -h "$task_dir" -p 55439 -d fresh -v ON_ERROR_STOP=1 -f "$task_root/supabase/migrations/007_simple_question.sql" >"$task_dir/rejection007.log" 2>&1; then
+  echo "ERROR: 007 replacement accepted while test running"; exit 1
+fi
+if ! rg -q QUESTION_BANK_IN_USE "$task_dir/rejection007.log"; then cat "$task_dir/rejection007.log"; exit 1; fi
+"$task_bin/psql" -h "$task_dir" -p 55439 -d fresh -v ON_ERROR_STOP=1 -c "select public.submit_appex_attempt('00700000-0000-4000-8000-000000000101');"
+"$task_bin/psql" -h "$task_dir" -p 55439 -d fresh -v ON_ERROR_STOP=1 \
+  -f "$task_root/supabase/migrations/007_simple_question.sql" \
+  -f "$task_root/supabase/migrations/007_simple_question.sql" \
+  -f "$task_root/supabase/tests/bank_007.sql"
 echo "Database integration checks passed. Temporary files: $task_dir"

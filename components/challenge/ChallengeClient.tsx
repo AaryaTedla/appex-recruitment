@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/Field";
 import { cn, formatCategory } from "@/lib/utils";
 import type { ChallengeBootstrap, Question } from "@/types";
 
+const isMcq = (question: Question) => ["mcq", "code_output", "scenario_mcq", "true_false"].includes(question.type);
+
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 export function ChallengeClient({ candidateName }: { candidateName: string }) {
@@ -26,6 +28,7 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [reminderDismissed, setReminderDismissed] = useState(false);
   const answersRef = useRef<Record<string, string>>({});
   const submittingRef = useRef(false);
   const serverOffset = useRef(0);
@@ -55,6 +58,7 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
           return;
         }
         setData(payload);
+        try { setReminderDismissed(localStorage.getItem(`appex-time-reminder:${payload.attempt.id}`) === "dismissed"); } catch { /* Storage may be unavailable. */ }
         serverOffset.current = new Date(payload.timer.serverNow).getTime() - Date.now();
         setIntegrityCount(payload.integrityCount || 0);
         answersRef.current = Object.fromEntries((payload.answers || []).map((answer: { question_id: string; answer_text: string }) => [answer.question_id, answer.answer_text]));
@@ -210,6 +214,28 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     return data.questions.filter((question) => (answers[question.id] || "").trim().length > 0).length;
   }, [answers, data]);
 
+  const sections = [
+    { label: "MCQs", suggested: 12, questions: (data?.questions || []).map((q, index) => ({ q, index })).filter(({ q }) => isMcq(q)) },
+    { label: "Descriptive", suggested: 18, questions: (data?.questions || []).map((q, index) => ({ q, index })).filter(({ q }) => !isMcq(q)) },
+  ].filter((section) => section.questions.length > 0);
+  const descriptive = sections.find((section) => section.label === "Descriptive");
+  const showTimeReminder = !reminderDismissed && !submitting && data?.timer.enabled && secondsLeft != null && secondsLeft > 0
+    && data.timer.minutes * 60 - secondsLeft >= 12 * 60
+    && descriptive?.questions.some(({ q }) => !(answers[q.id] || "").trim());
+  const dismissReminder = () => {
+    setReminderDismissed(true);
+    try { localStorage.setItem(`appex-time-reminder:${data?.attempt.id}`, "dismissed"); } catch { /* Keep in-memory dismissal. */ }
+  };
+  const timeReminder = showTimeReminder ? (
+    <div role="status" className="mt-5 rounded-xl border border-violet-400/30 bg-violet-500/10 p-4 text-sm text-zinc-200">
+      <p>Save time for the two descriptive answers. Aim to leave around 18 minutes.</p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Button variant="secondary" onClick={() => { setCurrent(descriptive!.questions[0].index); setReviewing(false); dismissReminder(); }}>Go to descriptive</Button>
+        <Button variant="secondary" onClick={dismissReminder}>Dismiss</Button>
+      </div>
+    </div>
+  ) : null;
+
   if (loading) {
     return <div className="mx-auto max-w-3xl px-5 py-16 text-center text-sm text-zinc-500">Preparing your challenge…</div>;
   }
@@ -228,6 +254,7 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <ChallengeTopBar name={candidateName} secondsLeft={secondsLeft} saveState={saveState} integrityCount={integrityCount} />
+        {timeReminder}
         {submitError && <p role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{submitError} Your current answers are still here. Try submitting again.</p>}
         <div className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">Review</p>
@@ -237,8 +264,10 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
             <span><strong className="text-zinc-100">Unanswered:</strong> {data.questions.length - answeredCount}</span>
           </div>
 
-          <Card className="mt-8 overflow-hidden">
-            {data.questions.map((question, index) => {
+          {sections.map((section) => <section key={section.label} className="mt-8">
+            <h2 className="text-sm font-semibold text-zinc-200">{section.label}</h2>
+            <Card className="mt-3 overflow-hidden">
+            {section.questions.map(({ q: question, index }) => {
               const done = Boolean((answers[question.id] || "").trim());
               return (
                 <button
@@ -251,7 +280,8 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
                 </button>
               );
             })}
-          </Card>
+            </Card>
+          </section>)}
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
             <Button variant="secondary" onClick={() => setReviewing(false)}>Go Back</Button>
@@ -273,16 +303,27 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
       </div>
     );
   }
+  const activeSection = sections.find((section) => section.questions.some(({ index }) => index === current))!;
+  const sectionPosition = activeSection.questions.findIndex(({ index }) => index === current) + 1;
   const progress = ((current + 1) / data.questions.length) * 100;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <ChallengeTopBar name={candidateName} secondsLeft={secondsLeft} saveState={saveState} integrityCount={integrityCount} />
+        {timeReminder}
       {submitError && <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200"><p>{submitError} Your current answers are still here.</p><Button className="mt-3" disabled={submitting} onClick={() => void submitChallenge()}>Retry submission</Button></div>}
 
+      <nav aria-label="Test sections" className="mt-6 grid gap-3 sm:grid-cols-2">
+        {sections.map((section) => <button key={section.label} onClick={() => setCurrent(section.questions[0].index)}
+          aria-current={section.label === activeSection.label ? "true" : undefined}
+          className={cn("rounded-xl border p-4 text-left text-sm", section.label === activeSection.label ? "border-violet-400/50 bg-violet-500/10" : "border-line hover:bg-white/5")}>
+          <span className="block font-semibold">{section.label} · {section.questions.filter(({ q }) => (answers[q.id] || "").trim()).length}/{section.questions.length} answered</span>
+          <span className="mt-1 block text-xs text-zinc-400">Suggested {section.suggested} minutes · switch anytime</span>
+        </button>)}
+      </nav>
       <div className="mt-8 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-medium text-zinc-500">Question {current + 1} of {data.questions.length}</p>
+          <p className="text-xs font-medium text-zinc-500">{activeSection.label} · {sectionPosition} of {activeSection.questions.length}</p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-300">{formatCategory(question.category)}</p>
         </div>
         <div className="text-xs text-zinc-500">{question.points} pts</div>
@@ -295,8 +336,11 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
         <fieldset className="min-w-0" disabled={submitting || secondsLeft === 0}><QuestionView question={question} value={answers[question.id] || ""} onChange={(value, immediate) => setAnswer(question.id, value, immediate)} /></fieldset>
       </Card>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="Question navigator">
-        {data.questions.map((q, index) => (
+      <nav className="mt-6 space-y-4" aria-label="Question navigator">
+        {sections.map((section) => <div key={section.label}>
+          <h2 className="mb-2 text-xs font-semibold text-zinc-400">{section.label}</h2>
+          <div className="flex flex-wrap gap-2">
+        {section.questions.map(({ q, index }) => (
           <button
             key={q.id}
             aria-label={`Go to question ${index + 1}${(answers[q.id] || "").trim() ? ", answered" : ", unanswered"}`}
@@ -310,7 +354,9 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
             {index + 1}
           </button>
         ))}
-      </div>
+          </div>
+        </div>)}
+      </nav>
 
       <div className="mt-7 flex items-center justify-between gap-3">
         <Button variant="secondary" disabled={current === 0} onClick={() => setCurrent((value) => Math.max(0, value - 1))}>Previous</Button>

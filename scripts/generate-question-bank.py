@@ -9,7 +9,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--check', action='store_true')
-parser.add_argument('--version', choices=['005', '006'], default='006')
+parser.add_argument('--version', choices=['005', '006', '007'], default='007')
 args = parser.parse_args()
 version = args.version
 root = Path(__file__).resolve().parents[1]
@@ -19,7 +19,7 @@ assert len(bank) == 22 and len(objective) == 20
 assert sum(q['points'] for q in bank) == 100
 assert len({q['id'] for q in bank}) == len(bank)
 assert [q['sort_order'] for q in bank] == list(range(1, 23))
-assert Counter(q['difficulty'] for q in objective) == ({'easy': 10, 'medium': 10} if version == '005' else {'easy': 14, 'medium': 6})
+assert Counter(q['difficulty'] for q in objective) == ({'easy': 10, 'medium': 10} if version == '005' else ({'easy': 14, 'medium': 6} if version == '006' else {'easy': 15, 'medium': 5}))
 assert Counter(q['category'] for q in objective) == {'python_programming': 4, 'computer_technology': 4, 'aptitude_patterns': 4, 'situational_decision': 4, 'commitment_reliability': 2, 'wildcard': 2}
 for q in objective:
     assert q['points'] == 4 and len(q['options']) == len(set(q['options'])) == 4
@@ -57,14 +57,14 @@ select ''' + ', '.join('false' if k == 'is_active' else k for k in fields) + '''
 update public.questions set is_active=true where id in (select id from appex_bank_005);
 '''
 stage = stage.replace('appex_bank_005', f'appex_bank_{version}').replace('$bank005$', f'$bank{version}$').replace('Bank 005', f'Bank {version}')
-seed = seed.replace('migration 005', 'migration 006')
-migration_path = root / ('supabase/migrations/005_test_bank.sql' if version == '005' else 'supabase/migrations/006_easier_test_bank.sql')
+seed = seed.replace('migration 005', 'migration 007')
+migration_path = root / ('supabase/migrations/005_test_bank.sql' if version == '005' else ('supabase/migrations/006_easier_test_bank.sql' if version == '006' else 'supabase/migrations/007_simple_question.sql'))
 current = migration_path.read_text()
 start = f'-- BEGIN GENERATED BANK {version}\n'
 end = f'-- END GENERATED BANK {version}'
 new = current.split(start)[0] + start + stage + end + current.split(end)[1]
 outputs = [(migration_path, new)]
-if version == '006': outputs.append((root / 'supabase/seed.sql', seed))
+if version == '007': outputs.append((root / 'supabase/seed.sql', seed))
 for path, content in outputs:
     if args.check:
         assert path.read_text() == content, f'{path.name} differs from generated content'

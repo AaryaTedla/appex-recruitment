@@ -1,5 +1,5 @@
 -- Fresh installations only: 20 MCQs + 2 descriptive tasks, 100 points.
--- Existing installations must use migration 006 instead of rerunning this file.
+-- Existing installations must use migration 007 instead of rerunning this file.
 insert into public.questions
 (id, category, type, question_text, code_snippet, options, correct_answer, points, difficulty, is_active, sort_order, evaluation_notes)
 values
@@ -15,9 +15,9 @@ for n in range(1, 6):
         continue
     total += n
 print(total)', '["6", "9", "15", "12"]'::jsonb, '6', 4, 'medium', true, 3, 'range(1, 6) visits 1 through 5. Odd values skip the addition; only 2 and 4 are added.'),
-('00600000-0000-4000-8000-000000000004', 'python_programming', 'code_output', 'What does this dictionary code print?', 'counts = {"a": 2}
-counts["b"] = counts.get("b", 0) + 1
-print(counts.get("a", 0) + counts["b"])', '["1", "2", "3", "4"]'::jsonb, '3', 4, 'medium', true, 4, 'Missing key b defaults to 0 and is incremented to 1. Existing key a stays 2. The printed sum is 3.'),
+('00700000-0000-4000-8000-000000000004', 'python_programming', 'code_output', 'What does this code print?', 'x = 2
+y = 3
+print(x + y)', '["3", "4", "5", "6"]'::jsonb, '5', 4, 'easy', true, 4, 'x is 2 and y is 3. Adding them gives 5.'),
 ('00600000-0000-4000-8000-000000000005', 'computer_technology', 'mcq', 'Which statement is true when you save a file to an SSD and shut down your laptop?', null, '["Both remain in RAM until the next restart", "The document remains on the SSD; the app’s RAM contents are lost", "The document moves into RAM; the app’s state stays on the SSD automatically", "Both are lost unless the laptop stays plugged in"]'::jsonb, 'The document remains on the SSD; the app’s RAM contents are lost', 4, 'easy', true, 5, 'An SSD is nonvolatile storage; ordinary RAM is volatile. Saving the document persists it, but does not automatically persist all application working memory.'),
 ('00600000-0000-4000-8000-000000000006', 'computer_technology', 'mcq', 'A website opens using its IP address, but not its name. Which tool should you use first to check how the name is translated into an IP address?', null, '["Measure download speed using the IP address", "Check the laptop’s available RAM", "Reinstall the browser before checking the address", "Look up that hostname using a DNS lookup tool"]'::jsonb, 'Look up that hostname using a DNS lookup tool', 4, 'easy', true, 6, 'A DNS lookup tests the hostname-to-address mapping directly. IP connectivity and general browser access are already partly established. A lookup can reveal an incorrect or missing DNS result; it does not prove every other part of the site works.'),
 ('00600000-0000-4000-8000-000000000007', 'computer_technology', 'mcq', 'An API returns HTTP 404 (not found). What should you check first?', null, '["Compare the requested path and resource ID with the API’s defined routes", "Increase the request timeout to allow more processing", "Check whether the request exceeded the server’s rate limit", "Check whether the server’s disk has enough free space"]'::jsonb, 'Compare the requested path and resource ID with the API’s defined routes', 4, 'easy', true, 7, '404 indicates that the requested resource was not found. Route/path and resource-ID checks address that meaning most directly; a timeout, rate limit, or disk failure would not explain 404 by itself.'),
