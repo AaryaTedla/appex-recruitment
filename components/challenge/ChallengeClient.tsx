@@ -1,5 +1,7 @@
 "use client";
 
+import { DESCRIPTIVE_ANSWER_LIMIT } from "@/lib/challengeLimits";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -378,12 +380,12 @@ function QuestionView({ question, value, onChange }: { question: Question; value
           <Textarea
             aria-label="Your answer"
             value={value}
-            onChange={(event) => onChange(event.target.value.slice(0, 500))}
+            onChange={(event) => onChange(event.target.value.slice(0, DESCRIPTIVE_ANSWER_LIMIT))}
             rows={7}
             placeholder="Your answer…"
-            maxLength={500}
+            maxLength={DESCRIPTIVE_ANSWER_LIMIT}
           />
-          <div className="mt-2 text-right text-xs text-zinc-600">{value.length} / 500</div>
+          <div className="mt-2 text-right text-xs text-zinc-600">{value.length} / {DESCRIPTIVE_ANSWER_LIMIT}</div>
         </div>
       )}
     </div>

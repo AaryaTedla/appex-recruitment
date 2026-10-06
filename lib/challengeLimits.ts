@@ -1,0 +1,1 @@
+export const DESCRIPTIVE_ANSWER_LIMIT = 1500;

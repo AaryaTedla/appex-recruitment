@@ -1,0 +1,410 @@
+[
+  {
+    "id": "00500000-0000-4000-8000-000000000001",
+    "category": "python_programming",
+    "type": "code_output",
+    "question_text": "What does this code print?",
+    "code_snippet": "a = [1, 2]\nb = a\nb.append(3)\nprint(len(a), a[-1])",
+    "options": [
+      "2 2",
+      "3 3",
+      "2 3",
+      "3 2"
+    ],
+    "correct_answer": "3 3",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 1,
+    "evaluation_notes": "b and a refer to the same list. append changes that list to [1, 2, 3], so its length and last element are both 3."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000002",
+    "category": "python_programming",
+    "type": "code_output",
+    "question_text": "What is the output of this slice?",
+    "code_snippet": "word = \"APPEX\"\nprint(word[1:4])",
+    "options": [
+      "APP",
+      "PEX",
+      "PP",
+      "PPE"
+    ],
+    "correct_answer": "PPE",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 2,
+    "evaluation_notes": "Python slices include the start index and exclude the stop index. Positions 1, 2, and 3 are P, P, and E."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000003",
+    "category": "python_programming",
+    "type": "code_output",
+    "question_text": "What value is printed after the loop?",
+    "code_snippet": "total = 0\nfor n in range(1, 6):\n    if n % 2 != 0:\n        continue\n    total += n\nprint(total)",
+    "options": [
+      "6",
+      "9",
+      "15",
+      "12"
+    ],
+    "correct_answer": "6",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 3,
+    "evaluation_notes": "range(1, 6) visits 1 through 5. Odd values skip the addition; only 2 and 4 are added."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000004",
+    "category": "python_programming",
+    "type": "code_output",
+    "question_text": "What does this dictionary code print?",
+    "code_snippet": "counts = {\"a\": 2}\ncounts[\"b\"] = counts.get(\"b\", 0) + 1\nprint(counts.get(\"a\", 0) + counts[\"b\"])",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correct_answer": "3",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 4,
+    "evaluation_notes": "Missing key b defaults to 0 and is incremented to 1. Existing key a stays 2. The printed sum is 3."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000005",
+    "category": "computer_technology",
+    "type": "mcq",
+    "question_text": "You save a document to your laptop’s SSD and shut it down normally. Which statement describes the document and the running app’s working memory?",
+    "code_snippet": null,
+    "options": [
+      "Both remain in RAM until the next restart",
+      "The document remains on the SSD; the app’s RAM contents are lost",
+      "The document moves into RAM; the app’s state stays on the SSD automatically",
+      "Both are lost unless the laptop stays plugged in"
+    ],
+    "correct_answer": "The document remains on the SSD; the app’s RAM contents are lost",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 5,
+    "evaluation_notes": "An SSD is nonvolatile storage; ordinary RAM is volatile. Saving the document persists it, but does not automatically persist all application working memory."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000006",
+    "category": "computer_technology",
+    "type": "mcq",
+    "question_text": "A site is reachable using its server IP, but its hostname fails on one laptop. Other sites work. Which check most directly tests hostname resolution?",
+    "code_snippet": null,
+    "options": [
+      "Measure download speed using the IP address",
+      "Check the laptop’s available RAM",
+      "Reinstall the browser before checking the address",
+      "Look up that hostname using a DNS lookup tool"
+    ],
+    "correct_answer": "Look up that hostname using a DNS lookup tool",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 6,
+    "evaluation_notes": "A DNS lookup tests the hostname-to-address mapping directly. IP connectivity and general browser access are already partly established. A lookup can reveal an incorrect or missing DNS result; it does not prove every other part of the site works."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000007",
+    "category": "computer_technology",
+    "type": "mcq",
+    "question_text": "An API request reaches the intended server but returns HTTP 404. Which check most directly addresses the meaning of that response?",
+    "code_snippet": null,
+    "options": [
+      "Compare the requested path and resource ID with the API’s defined routes",
+      "Increase the request timeout to allow more processing",
+      "Check whether the request exceeded the server’s rate limit",
+      "Check whether the server’s disk has enough free space"
+    ],
+    "correct_answer": "Compare the requested path and resource ID with the API’s defined routes",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 7,
+    "evaluation_notes": "404 indicates that the requested resource was not found. Route/path and resource-ID checks address that meaning most directly; a timeout, rate limit, or disk failure would not explain 404 by itself."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000008",
+    "category": "computer_technology",
+    "type": "mcq",
+    "question_text": "A web app needs a private service key to access a database. Visitors must not receive the key. Where should the database request using that key run?",
+    "code_snippet": null,
+    "options": [
+      "In browser JavaScript with the key Base64-encoded",
+      "In browser JavaScript loaded only after login",
+      "On a server endpoint that checks access and keeps the key server-side",
+      "In a public environment variable with a difficult-to-guess name"
+    ],
+    "correct_answer": "On a server endpoint that checks access and keeps the key server-side",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 8,
+    "evaluation_notes": "Browser-delivered keys can be inspected regardless of encoding, login gating, or variable names. Keep the key server-side and authorize each request; a server endpoint alone is insufficient without access checks."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000009",
+    "category": "aptitude_patterns",
+    "type": "mcq",
+    "question_text": "Four volunteers pack 12 identical kits in 3 hours. At the same constant rate per volunteer, how many kits can six volunteers pack in 5 hours?",
+    "code_snippet": null,
+    "options": [
+      "24",
+      "30",
+      "36",
+      "40"
+    ],
+    "correct_answer": "30",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 9,
+    "evaluation_notes": "12 / (4 × 3) = 1 kit per volunteer-hour. Six volunteers for five hours produce 30 kits. The question explicitly assumes constant individual rates."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000010",
+    "category": "aptitude_patterns",
+    "type": "mcq",
+    "question_text": "The gaps in this sequence increase by 2 each time: 2, 6, 12, 20, 30. What comes next?",
+    "code_snippet": null,
+    "options": [
+      "38",
+      "40",
+      "44",
+      "42"
+    ],
+    "correct_answer": "42",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 10,
+    "evaluation_notes": "The gaps are 4, 6, 8, 10, then 12. The next term is 30 + 12 = 42. The stated rule removes ambiguity about other possible sequence continuations."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000011",
+    "category": "aptitude_patterns",
+    "type": "mcq",
+    "question_text": "No trial accounts can publish. Some club accounts are trial accounts. Which conclusion must follow?",
+    "code_snippet": null,
+    "options": [
+      "Some club accounts cannot publish",
+      "All club accounts cannot publish",
+      "All accounts that cannot publish are trial accounts",
+      "Some trial accounts can publish if they are club accounts"
+    ],
+    "correct_answer": "Some club accounts cannot publish",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 11,
+    "evaluation_notes": "At least some club accounts belong to the trial group, and every member of that group cannot publish. Nothing states that all club accounts are trial accounts or that trial status is the only reason publishing might be unavailable."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000012",
+    "category": "aptitude_patterns",
+    "type": "mcq",
+    "question_text": "A bag contains 3 blue tokens and 2 red tokens. You draw two tokens randomly without replacement. What is the probability that the first is blue and the second is red?",
+    "code_snippet": null,
+    "options": [
+      "1/5",
+      "2/5",
+      "3/10",
+      "1/2"
+    ],
+    "correct_answer": "3/10",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 12,
+    "evaluation_notes": "P(first blue) = 3/5. With a blue removed, P(second red) = 2/4. Multiply to obtain 6/20 = 3/10. Order matters; this is not the probability of one token of each color in either order."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000013",
+    "category": "situational_decision",
+    "type": "scenario_mcq",
+    "question_text": "A demo is due in 30 minutes. The required login works; required export needs 10 minutes of work and 10 minutes of testing. An optional chart needs at least 40 minutes. Which plan meets the stated requirements?",
+    "code_snippet": null,
+    "options": [
+      "Spend 15 minutes on the chart, then finish export and its testing in the remaining time",
+      "Finish and test export, freeze the chart, and use the remaining time for a rehearsal",
+      "Spend 30 minutes on the chart, then demonstrate export using the unfinished version",
+      "Spend 20 minutes on the chart and 10 on export, skipping export testing"
+    ],
+    "correct_answer": "Finish and test export, freeze the chart, and use the remaining time for a rehearsal",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 13,
+    "evaluation_notes": "Export work plus its required testing takes 20 minutes, leaving 10 for rehearsal. The optional chart cannot be completed within the available time. The correct plan satisfies mandatory scope without dropping validation."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000014",
+    "category": "situational_decision",
+    "type": "scenario_mcq",
+    "question_text": "Two volunteers each do one task at a time. Task A takes 10 minutes. Task B takes 20 minutes and can start only after A. Independent task C takes 15 minutes. Tasks cannot be split. What is the earliest all three can finish?",
+    "code_snippet": null,
+    "options": [
+      "25 minutes: split B between both volunteers",
+      "35 minutes: do A and C first, then B",
+      "45 minutes: do all tasks in sequence",
+      "30 minutes: run A and C together, then begin B as soon as A finishes"
+    ],
+    "correct_answer": "30 minutes: run A and C together, then begin B as soon as A finishes",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 14,
+    "evaluation_notes": "The A→B dependency chain requires at least 30 minutes. Run A and C in parallel at time 0, and B from time 10 to 30. Waiting until C ends is unnecessary, and splitting tasks is explicitly disallowed."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000015",
+    "category": "situational_decision",
+    "type": "scenario_mcq",
+    "question_text": "Five visitors abandon a signup page. Logs show they reach the page but do not say where they struggle. You have 30 minutes before choosing a change. What gives the most direct evidence about the cause?",
+    "code_snippet": null,
+    "options": [
+      "Observe a few visitors attempting signup and record the step where they get stuck",
+      "Change the page colors and compare total visits immediately",
+      "Add more required fields to learn more about visitors",
+      "Ask the team to vote on the most attractive replacement layout"
+    ],
+    "correct_answer": "Observe a few visitors attempting signup and record the step where they get stuck",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 15,
+    "evaluation_notes": "A short observed task provides direct evidence of the point of difficulty. Visits alone do not identify signup friction, extra fields change the problem, and team preferences are not observations of visitor behavior. This is diagnostic evidence, not a statistically conclusive experiment."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000016",
+    "category": "situational_decision",
+    "type": "scenario_mcq",
+    "question_text": "A room holds 40 people. Eighty attendees each need one uninterrupted 1-hour workshop. You have the room for 2 hours, and sessions can run back-to-back with no setup gap. Which plan meets both constraints?",
+    "code_snippet": null,
+    "options": [
+      "Three sessions of 30, 30, and 20 attendees, each lasting 1 hour",
+      "Four 20-person sessions of 30 minutes each",
+      "Two 40-person sessions of 1 hour each",
+      "One 80-person session lasting 2 hours"
+    ],
+    "correct_answer": "Two 40-person sessions of 1 hour each",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 16,
+    "evaluation_notes": "Two back-to-back one-hour sessions provide 80 complete attendee-hours while occupancy never exceeds 40. Three one-hour sessions need three hours. Half-hour sessions do not meet the uninterrupted one-hour requirement; one 80-person session exceeds capacity."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000017",
+    "category": "commitment_reliability",
+    "type": "scenario_mcq",
+    "question_text": "A sponsor report is due today. Attendance totals are verified, but survey results are still being checked. The sponsor permits a partial report if pending sections are clearly identified. What should you send?",
+    "code_snippet": null,
+    "options": [
+      "Send verified attendance totals and present provisional survey estimates as final results",
+      "The verified totals, clearly marked pending survey results, and a follow-up time",
+      "Hold the entire report until surveys are checked and propose a follow-up after today’s deadline",
+      "Send verified attendance totals and mark the unchecked survey section complete without figures"
+    ],
+    "correct_answer": "The verified totals, clearly marked pending survey results, and a follow-up time",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 17,
+    "evaluation_notes": "The sponsor explicitly permits a labeled partial report. Share verified facts, identify pending results, and commit to a follow-up. Presenting estimates as final or marking an unchecked section complete misrepresents certainty. Holding the entire report misses today’s deadline despite the permitted partial delivery."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000018",
+    "category": "commitment_reliability",
+    "type": "scenario_mcq",
+    "question_text": "You have 1 hour left and two tasks that each need 1 hour. Your lead assigned both; neither has a stated priority, and you cannot delegate. What should you do first?",
+    "code_snippet": null,
+    "options": [
+      "Split the hour equally between the two tasks and mark both complete despite unfinished work",
+      "Start the newer task and reserve the last five minutes to explain why the older one is unfinished",
+      "Start the older task and tell the lead about the newer one only if someone asks after the deadline",
+      "Tell the lead the time conflict now and agree which task to finish and when to deliver the other"
+    ],
+    "correct_answer": "Tell the lead the time conflict now and agree which task to finish and when to deliver the other",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 18,
+    "evaluation_notes": "Available capacity cannot satisfy both tasks. Clarify priority and renegotiate the other delivery before the deadline. Do not claim partial tasks are complete or silently invent priority when the lead can resolve it."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000019",
+    "category": "wildcard",
+    "type": "scenario_mcq",
+    "question_text": "You are testing whether moving a display closer to an entrance attracts more visitors. You can move it and change its poster, but want to isolate the effect of location. Which trial is best?",
+    "code_snippet": null,
+    "options": [
+      "Keep the poster and observation duration unchanged; compare the two locations under similar visitor flow",
+      "Move the display and replace the poster in the same trial",
+      "Compare a quiet morning at one location with the busiest hour at the other",
+      "Use different posters at each location and compare the total visitors"
+    ],
+    "correct_answer": "Keep the poster and observation duration unchanged; compare the two locations under similar visitor flow",
+    "points": 4,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 19,
+    "evaluation_notes": "To isolate location, hold the poster and observation duration constant and make visitor flow comparable. Simultaneous changes confound interpretation. Similar flow reduces a confound but does not make this a perfectly controlled experiment."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000020",
+    "category": "wildcard",
+    "type": "scenario_mcq",
+    "question_text": "You want to test whether visitors understand a proposed app’s instructions before writing code. You have paper, a printer, and 20 minutes. Which prototype most directly tests that?",
+    "code_snippet": null,
+    "options": [
+      "A poster asking visitors whether they would like the finished app",
+      "A spreadsheet forecasting how many people will use it",
+      "Paper screens with the actual instructions; ask visitors to complete the intended task",
+      "A slide listing every feature planned for the final app"
+    ],
+    "correct_answer": "Paper screens with the actual instructions; ask visitors to complete the intended task",
+    "points": 4,
+    "difficulty": "easy",
+    "is_active": true,
+    "sort_order": 20,
+    "evaluation_notes": "Task completion with the actual instructions directly tests comprehension within the available resources. Interest, usage forecasts, and feature descriptions answer different questions. The paper prototype validates instructions, not all aspects of the finished app."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000021",
+    "category": "situational_decision",
+    "type": "short_text",
+    "question_text": "You must run a 90-minute APPEX hands-on workshop tomorrow for 40 attendees. You have ₹1,000, three volunteers, 10 shared laptops, and unreliable Wi-Fi. Give a practical action plan: choose the activity, split tasks, outline the session, and decide how to share laptops and spend the budget. Explain one tradeoff, how you will judge success, and a fallback if a volunteer is absent.",
+    "code_snippet": null,
+    "options": null,
+    "correct_answer": null,
+    "points": 10,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 21,
+    "evaluation_notes": "Score holistically out of 10. Look for a feasible timed plan, four-person laptop groups or another justified sharing arrangement, explicit volunteer ownership, a budget within ₹1,000, an offline-ready activity, a justified scope tradeoff, a measurable success check, and an absence fallback. Many activities are valid; do not require a particular project. 1–3: largely vague or violates major constraints. 4–6: workable core plan with some gaps. 7–8: clear priorities and coverage of most constraints. 9–10: coherent, realistic plan connecting tasks, tradeoffs, success, and fallback. Award 0 only for no meaningful answer. Reward reasoning, not length."
+  },
+  {
+    "id": "00500000-0000-4000-8000-000000000022",
+    "category": "improvisation_problem_solving",
+    "type": "short_text",
+    "question_text": "Your team’s demo works on one laptop but fails on the presentation laptop. You have 15 minutes before presenting. Logs only say “request failed”; Wi-Fi may be unstable, and a teammate is blocked waiting for your API. Write an ordered response: name two quick checks and what their outcomes would tell you, assign work, choose a fallback if debugging takes too long, and explain what you tell your teammate and the audience. Do not assume the cause is already known.",
+    "code_snippet": null,
+    "options": null,
+    "correct_answer": null,
+    "points": 10,
+    "difficulty": "medium",
+    "is_active": true,
+    "sort_order": 22,
+    "evaluation_notes": "Score holistically out of 10. Look for timeboxed diagnosis that separates connectivity from configuration/API failure, two concrete checks with interpreted outcomes, parallel task assignments, an early fallback decision (working laptop, offline data, recording, or reduced live scope), unblocking the teammate with a contract/mock, and honest audience/team communication. Accept other defensible checks and fallbacks; do not assume Wi-Fi is definitely at fault. 1–3: guesses/restarts with little reasoning. 4–6: useful checks and a basic fallback but weak prioritization or communication. 7–8: ordered, timeboxed plan with work split and outcome-based decisions. 9–10: covers diagnosis, deadlines, dependencies, fallback, and transparent communication coherently. Award 0 only for no meaningful answer."
+  }
+]

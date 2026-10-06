@@ -10,5 +10,5 @@ export function formatCategory(category: string) {
 
 export function formatScore(value: number | null | undefined) {
   if (value == null) return "—";
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
 }

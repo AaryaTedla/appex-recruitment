@@ -14,7 +14,7 @@ export default function HomePage() {
         </div>
         <div className="border-t border-line pt-6 lg:mb-2 lg:border-t-0 lg:border-l lg:pl-9 lg:pt-0">
           <p className="max-w-xs text-xl leading-8 text-zinc-300 sm:text-2xl sm:leading-9">Your next chapter<br />starts at APPEX.</p>
-          <Link href="/join" className="mt-8 inline-flex min-h-14 items-center justify-between gap-10 border-b border-violet-300 pb-2 text-base font-semibold text-zinc-50 transition hover:text-violet-200">Start the test <span aria-hidden="true" className="text-2xl font-normal">↗</span></Link>
+          <Link href="/join" className="mt-8 inline-flex min-h-14 items-center justify-between gap-10 rounded-xl bg-violet-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-violet-700">Start the test <span aria-hidden="true" className="text-2xl font-normal">↗</span></Link>
         </div>
       </section>
       <section aria-label="Life at APPEX" className="relative z-10 mx-auto w-full max-w-6xl px-5 sm:px-8">

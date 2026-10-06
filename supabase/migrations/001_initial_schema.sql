@@ -35,6 +35,7 @@ create table if not exists public.questions (
   code_snippet text,
   options jsonb,
   correct_answer text,
+  evaluation_notes text,
   points numeric(5,2) not null check (points >= 0 and points <= 100),
   difficulty text not null default 'easy' check (difficulty in ('easy', 'medium')),
   is_active boolean not null default true,
@@ -70,7 +71,7 @@ create table if not exists public.answers (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (attempt_id, question_id),
-  constraint answers_text_length check (length(answer_text) <= 500),
+  constraint answers_text_length check (length(answer_text) <= 1500),
   constraint answers_scores_nonnegative check ((auto_score is null or auto_score >= 0) and (manual_score is null or manual_score >= 0))
 );
 

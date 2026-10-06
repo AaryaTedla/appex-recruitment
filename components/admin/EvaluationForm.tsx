@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
-import { formatCategory } from "@/lib/utils";
-import { RECOMMENDATIONS, RUBRIC_LABELS } from "@/lib/scoring";
+import { formatCategory, formatScore } from "@/lib/utils";
+import Link from "next/link";
+import { ratingToMarks, roundScore } from "@/lib/scoring/rating";
+import { RECOMMENDATIONS } from "@/lib/scoring";
 
 type Answer = {
   id: string;
@@ -40,13 +42,6 @@ type DraftItem = {
 
 type EvaluationDraft = Record<string, DraftItem>;
 
-function criteriaFor(category: string) {
-  if (category === "improvisation_problem_solving") return ["reasoning", "practicality", "adaptability"];
-  if (category === "wildcard") return ["creativity", "communication", "reasoning"];
-  if (category === "situational_decision") return ["teamwork", "practicality", "communication"];
-  return ["reasoning", "communication", "adaptability"];
-}
-
 export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCandidateId }: { attemptId: string; answers: Answer[]; existingEvaluation: ExistingEvaluation; nextCandidateId?: string }) {
   const router = useRouter();
   const [draft, setDraft] = useState<EvaluationDraft>(() => Object.fromEntries(answers.map((answer) => [answer.id, {
@@ -57,10 +52,10 @@ export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCan
   const [comments, setComments] = useState(existingEvaluation?.comments || "");
   const [recommendation, setRecommendation] = useState(existingEvaluation?.recommendation || "Maybe");
   const automaticTotal = useMemo(() => answers.reduce((sum, answer) => sum + Number(answer.auto_score || 0), 0), [answers]);
-  const manualTotal = useMemo(() => Object.values(draft as EvaluationDraft).reduce<number>((sum, item) => sum + (Number(item.manualScore) || 0), 0), [draft]);
-  const [finalScore, setFinalScore] = useState(String(existingEvaluation?.score ?? Math.min(100, automaticTotal + manualTotal)));
-  const [scoreOverride, setScoreOverride] = useState(existingEvaluation?.score != null && Number(existingEvaluation.score) !== Math.min(100, automaticTotal + manualTotal));
-  const displayedScore = scoreOverride ? finalScore : String(Math.min(100, automaticTotal + manualTotal));
+  const manualTotal = useMemo(() => roundScore(Object.values(draft as EvaluationDraft).reduce<number>((sum, item) => sum + (Number(item.manualScore) || 0), 0)), [draft]);
+  const [finalScore, setFinalScore] = useState(String(existingEvaluation?.score ?? Math.min(100, roundScore(automaticTotal + manualTotal))));
+  const [scoreOverride, setScoreOverride] = useState(existingEvaluation?.score != null && Number(existingEvaluation.score) !== Math.min(100, roundScore(automaticTotal + manualTotal)));
+  const displayedScore = scoreOverride ? finalScore : String(Math.min(100, roundScore(automaticTotal + manualTotal)));
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -77,7 +72,7 @@ export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCan
       return !value.trim() || !Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > answer.question.points;
     });
     if (invalid) {
-      setError(`Enter marks between 0 and ${invalid.question.points} for every open response. Use 0 for unanswered questions.`);
+      setError("Choose a score for every open response. Use No credit for unanswered or incorrect responses.");
       setState("error");
       document.getElementById(`manual-${invalid.id}`)?.focus();
       return;
@@ -126,7 +121,8 @@ export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCan
     <fieldset disabled={state === "saving"} className="min-w-0 space-y-8">
       <div>
         <h2 className="text-xl font-bold">Candidate answers</h2>
-        <p className="mt-2 text-sm text-zinc-500">Enter marks for each open response, then choose a recommendation. Objective answers are already scored.</p>
+        <p className="mt-2 text-sm text-zinc-500">Choose a score for each open response, then a recommendation. Objective answers are already scored.</p>
+        <Link href="/admin/answer-key" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-violet-300">Answer key &amp; scoring guidance ↗<span className="sr-only"> (opens in a new tab)</span></Link>
       </div>
 
       <div className="rounded-2xl border border-line bg-panel/70 p-5" aria-live="polite">
@@ -135,7 +131,6 @@ export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCan
         <p className="mt-1 text-xs text-zinc-400">Objective: {automaticTotal} · Manual: {manualTotal}</p>
       </div>
       {answers.filter((answer) => descriptive.includes(answer)).map((answer, index) => {
-        const isDescriptive = !["mcq", "scenario_mcq", "true_false", "code_output"].includes(answer.question.type);
         const item = draft[answer.id];
         return (
           <section key={answer.id} className="rounded-2xl border border-line bg-panel/70 p-5 sm:p-6">
@@ -151,46 +146,24 @@ export function EvaluationForm({ attemptId, answers, existingEvaluation, nextCan
               {answer.answer_text || <span className="text-zinc-600">No answer</span>}
             </div>
 
-            {!isDescriptive ? (
-              <div className="mt-4 text-sm text-zinc-400">Auto score: <strong className="text-zinc-100">{answer.auto_score ?? 0} / {answer.question.points}</strong></div>
-            ) : (
-              <div className="mt-5 border-t border-line pt-5">
-                <div className="grid gap-5 lg:grid-cols-[150px_1fr]">
-                  <div>
-                    <label htmlFor={`manual-${answer.id}`} className="text-xs font-medium text-zinc-500">Marks</label>
-                    <input
-                      id={`manual-${answer.id}`}
-                      type="number"
-                      min={0}
-                      max={answer.question.points}
-                      step="0.5"
-                      value={item.manualScore}
-                      onChange={(e) => updateAnswer(answer.id, { manualScore: e.target.value })}
-                      className="mt-2 min-h-11 w-full rounded-xl border border-line bg-black/20 px-3 text-sm"
-                    />
-                    <div className="mt-1 text-xs text-zinc-600">out of {answer.question.points}</div>
+            <div className="mt-5 border-t border-line pt-5">
+                <fieldset id={`manual-${answer.id}`} tabIndex={-1}>
+                  <legend className="mb-3 text-sm font-medium text-zinc-300">Score / 10</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((rating) => {
+                      const marks = ratingToMarks(rating, answer.question.points);
+                      const selected = item.manualScore !== "" && Number(item.manualScore) === marks;
+                      return <button type="button" key={rating} disabled={Number(answer.question.points) === 0} aria-label={`Score ${rating} of 10 for response ${index + 1}`} aria-pressed={selected} onClick={() => updateAnswer(answer.id, { manualScore: String(marks) })} className={`grid h-11 w-11 place-items-center rounded-lg border text-sm font-semibold disabled:opacity-40 ${selected ? "border-violet-400 bg-violet-600 text-white" : "border-line text-zinc-300 hover:bg-white/5"}`}>{rating}</button>;
+                    })}
+                    <button type="button" aria-label={`No credit for response ${index + 1}`} aria-pressed={item.manualScore !== "" && Number(item.manualScore) === 0} onClick={() => updateAnswer(answer.id, { manualScore: "0" })} className={`min-h-11 rounded-lg border px-3 text-sm ${item.manualScore !== "" && Number(item.manualScore) === 0 ? "border-violet-400 bg-violet-600 text-white" : "border-line text-zinc-300 hover:bg-white/5"}`}>No credit (0)</button>
                   </div>
-                  <details className="space-y-4"><summary className="min-h-11 cursor-pointer text-sm text-violet-300">Detailed assessment (optional)</summary>
-                    {criteriaFor(answer.question.category).map((criterion) => (
-                      <div key={criterion}>
-                        <div className="mb-2 flex items-center justify-between"><span className="text-xs font-medium capitalize text-zinc-400">{criterion}</span><span className="text-[11px] text-zinc-600">1 weak · 5 excellent</span></div>
-                        <div className="flex gap-2">
-                          {RUBRIC_LABELS.map((label, i) => {
-                            const value = i + 1;
-                            const selected = Number(item.criteria[criterion]) === value;
-                            return <button aria-label={`${criterion}: ${label}`} aria-pressed={selected} title={label} key={value} onClick={() => updateAnswer(answer.id, { criteria: { ...item.criteria, [criterion]: value } })} className={`grid h-11 w-11 place-items-center rounded-lg border text-xs ${selected ? "border-violet-400 bg-violet-600 text-white" : "border-line text-zinc-500 hover:bg-white/5"}`}>{value}</button>;
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </details>
-                </div>
+                  <p className="mt-3 text-sm text-zinc-400">{item.manualScore === "" ? "Not scored yet" : `${formatScore(Number(item.manualScore))} / ${formatScore(Number(answer.question.points))} marks`}{Number(answer.question.points) !== 10 && " · Rating is scaled to this question’s point value."}</p>
+                </fieldset>
                 <details className="mt-4"><summary className="min-h-11 cursor-pointer text-sm text-zinc-400">Add an answer note (optional)</summary>
                 <label htmlFor={`comments-${answer.id}`} className="mt-5 block text-xs font-medium text-zinc-500">Answer comments</label>
                 <Textarea id={`comments-${answer.id}`} maxLength={2000} rows={3} className="mt-2" value={item.comments} onChange={(e) => updateAnswer(answer.id, { comments: e.target.value })} placeholder="Optional evaluator note…" />
                 </details>
-              </div>
-            )}
+            </div>
           </section>
         );
       })}

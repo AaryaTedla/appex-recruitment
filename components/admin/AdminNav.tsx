@@ -12,7 +12,7 @@ export function AdminNav({ role }: { role: UserRole }) {
   const router = useRouter();
   const navigation = useAdminNavigation();
   const selectedPath = navigation?.destination || pathname;
-  const links = [["/admin", "Overview"], ["/admin/candidates", "Candidates"], ["/admin/evaluations", "Evaluations"]];
+  const links = [["/admin", "Overview"], ["/admin/candidates", "Candidates"], ["/admin/evaluations", "Evaluations"], ["/admin/answer-key", "Answer key"]];
   if (role === "admin") links.push(["/admin/questions", "Questions"], ["/admin/users", "Access"]);
   return (
     <div className="border-b border-line bg-panel/70">

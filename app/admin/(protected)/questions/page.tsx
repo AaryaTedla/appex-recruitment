@@ -26,7 +26,7 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">Admin · Questions</p>
       <h1 className="mt-2 text-3xl font-bold">Challenge question bank</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">Keep the active set at roughly 14 questions and 100 total points. Deactivate old questions once attempts exist instead of deleting them.</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">The standard bank is 20 MCQs and 2 descriptive tasks, totaling 100 points. Deactivate old questions once attempts exist instead of deleting them.</p>
       <div className="mt-8"><QuestionManager key={page} questions={(result.data || []) as QuestionRow[]} stats={stats} /></div>
       <PageNavigation path="/admin/questions" params={params} page={page} count={result.count || 0} />
     </main>

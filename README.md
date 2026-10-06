@@ -4,7 +4,7 @@ A minimal, dark, mobile-friendly recruitment challenge for APPEX. It uses **Next
 
 The product has two intentionally separate experiences:
 
-- **Candidates:** SRN + full name → instructions → 14-question challenge → review → submit → completion.
+- **Candidates:** SRN + full name → instructions → 22-question challenge → review → submit → completion.
 - **APPEX team:** Supabase Auth login → dashboard → candidate review → manual evaluation → shortlist, plus question and evaluator management for admins.
 
 ## 1. What is implemented
@@ -12,19 +12,19 @@ The product has two intentionally separate experiences:
 ### Candidate experience
 
 - Minimal APPEX landing page and recruitment intro.
-- Candidate registration with only **SRN** and **Full Name**.
+- Candidate registration with **SRN**, **Full Name**, and self-reported online registration status.
 - SRN normalization to uppercase and database-level uniqueness. Full names are stored exactly as submitted (validation uses a trimmed copy without rewriting the stored value).
 - One attempt per SRN. Incomplete attempts resume; completed attempts cannot restart.
 - Opaque HTTP-only candidate session cookie. Candidates never receive a database service key.
 - Candidate instructions before the challenge timer starts.
-- 14 seeded questions across all requested categories.
+- 22 seeded questions (20 MCQs and 2 descriptive tasks) across all requested categories.
 - One-question-at-a-time challenge UI with type-specific rendering.
 - Previous/next controls, compact wrapping question navigator, progress bar, and character counts.
 - Autosave to the server and answer restoration after refresh.
 - Latest browser answer state is persisted again during final submission, preventing the last typed characters from being lost to a pending autosave.
 - Review screen with answered/unanswered counts before final submission.
 - Atomic, duplicate-safe submission.
-- Optional 15-minute server-backed timer. The server re-checks elapsed time; the client timer is only the display.
+- Optional 30-minute server-backed timer. The server re-checks elapsed time; the client timer is only the display.
 - Automatic submission on timeout.
 - Basic integrity logging for tab switches/window blur. One physical tab switch is de-duplicated so blur + visibility events do not normally count twice.
 - Warnings do not erase answers or automatically disqualify candidates. 3+ events are simply visible to evaluators.
@@ -39,7 +39,7 @@ The product has two intentionally separate experiences:
 - Candidate table with search and filters for status, evaluation state, shortlist state, and minimum score.
 - Candidate detail page with objective score, category scores, integrity events, and every submitted answer.
 - Manual scoring for descriptive/creative answers up to each question's point value.
-- 1–5 rubric controls for reasoning, practicality, creativity, communication, adaptability, and teamwork where relevant.
+- Selectable 1–10 descriptive ratings and No credit (0); historical question ratings scale to their maximum marks. Existing rubric data is preserved.
 - Overall evaluator comments, final recommendation, and final score.
 - Saved-state feedback.
 - An evaluator cannot silently overwrite another evaluator's completed review; an admin can override when necessary.
@@ -143,7 +143,7 @@ Fill in:
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
-NEXT_PUBLIC_CHALLENGE_MINUTES=15
+NEXT_PUBLIC_CHALLENGE_MINUTES=30
 NEXT_PUBLIC_CHALLENGE_TIMER_ENABLED=true
 ```
 
@@ -151,31 +151,31 @@ Important: `SUPABASE_SERVICE_ROLE_KEY` is a server secret. Never prefix it with 
 
 ## 5. Supabase setup
 
-**Existing project:** apply any missing migrations in order: `002_hardening.sql`, `003_update_rahul_email.sql`, then `004_online_registration.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
+**Existing project:** apply any missing migrations in order: `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, then `005_test_bank.sql` in Supabase's SQL Editor before using this version. Do not rerun the original schema or seed. The migration preserves candidate records and answers, installs the five-email database allowlist, and adds the transactional functions and review view required by the app.
 
 1. Create a new Supabase project.
 2. Open **SQL Editor**.
 3. Run `supabase/migrations/001_initial_schema.sql`.
 4. Run `supabase/seed.sql`.
-   Then run migrations `002_hardening.sql`, `003_update_rahul_email.sql`, and `004_online_registration.sql` in order.
+   Then run migrations `002_hardening.sql`, `003_update_rahul_email.sql`, `004_online_registration.sql`, and `005_test_bank.sql` in order.
 5. In **Project Settings → API**, copy the project URL, anon/public key, and service-role key into `.env.local`.
 6. In **Authentication**, keep email/password auth enabled for evaluator accounts.
 7. Do not enable public candidate sign-up through the evaluator login. Candidate registration is handled separately by the app.
 
-The seed creates exactly **14 active questions totaling 100 points**:
+The seed creates exactly **22 active questions totaling 100 points**:
 
 | Category | Points |
 | --- | ---: |
-| Python & Programming Fundamentals | 15 |
-| Computer & Technology Fundamentals | 15 |
-| Aptitude & Pattern Recognition | 20 |
-| Situational & Decision Making | 15 |
-| Improvisation & Problem Solving | 20 |
-| Commitment & Reliability | 5 |
-| Wildcard | 10 |
+| Python & Programming Fundamentals | 16 |
+| Computer & Technology Fundamentals | 16 |
+| Aptitude & Pattern Recognition | 16 |
+| Situational & Decision Making | 26 |
+| Improvisation & Problem Solving | 10 |
+| Commitment & Reliability | 8 |
+| Wildcard | 8 |
 | **Total** | **100** |
 
-The current seed has 70 automatically scored points and 30 evaluator-scored open-response points.
+The current seed has 80 automatically scored points (20 × 4) and 20 evaluator-scored descriptive points (2 × 10).
 
 ## 6. Create the first admin/evaluator
 
@@ -243,7 +243,7 @@ If a question already has answers, deletion is refused. Its historical content/p
 
 For reliability, active question changes are blocked while a candidate has a started, in-progress attempt. Prepare the next question set before the recruitment window or add new questions as inactive first.
 
-Keep the active set at roughly 14 questions and preserve the intended 100-point weighting.
+Keep the active set at 22 questions and preserve the intended 100-point weighting.
 
 ## 8. How candidate registration works
 
@@ -266,7 +266,7 @@ The candidate identity logic is isolated in `lib/auth/candidate.ts`, so PES emai
 1. Objective answers are scored atomically at submission by `submit_appex_attempt`.
 2. Evaluators open `/admin/candidates/[id]`.
 3. They inspect category performance, integrity events, and every candidate answer.
-4. Open-ended answers can receive manual points and 1–5 rubric criteria.
+4. Select 1–10 or No credit (0) for each descriptive answer. Older questions scale the rating to their original maximum; saved scores and rubric data remain intact. Totals update automatically.
 5. The evaluator writes overall comments, chooses:
    - Strongly Shortlist
    - Shortlist
@@ -315,7 +315,7 @@ No Express server, Docker, Redis, microservices, or additional backend is requir
 
 ## Operational checklist before a live recruitment round
 
-- Confirm the active question bank has the intended 14 questions and 100 points.
+- Confirm the active question bank has the intended 22 questions and 100 points.
 - Test one fresh candidate all the way through submission.
 - Test refresh/resume on an in-progress attempt.
 - Test a time-expired attempt if the timer is enabled.
@@ -348,3 +348,26 @@ Candidates, evaluations, and questions show 25 items per page. Filters remain in
 For performance diagnosis, start the server with `APPEX_PERF_TRACE=1`. Logs separate middleware authentication, page authentication, and database requests. Logs contain labels and timings only. Leave this option off for normal use. Production running: `npm run build`, then `npm start`.
 
 See `IMPLEMENTATION.md` for verification results and measured timings.
+
+
+## 15. Thirty-minute bank rollout
+
+For an existing database, run **`supabase/migrations/005_test_bank.sql` after 004** in Supabase SQL Editor before deploying this version. Do not rerun the seed or initial schema. The migration preserves old questions, answers, evaluations, and stored attempt durations. It deactivates the previous bank and activates 20 MCQs plus two descriptive tasks. It refuses replacement while an unexpired or untimed started test is running; let applicants finish and retry. Reapplication is safe when the bank content is unchanged.
+
+Set `NEXT_PUBLIC_CHALLENGE_MINUTES=30` in local and hosting environments, then restart/redeploy. New starts receive 30 minutes; already started attempts keep their stored duration. Descriptive answers accept up to 1,500 characters through the UI, autosave, final submission, and database functions.
+
+Evaluators can open **`/admin/answer-key`** for correct answers, explanations, and short task scoring guidance. Candidate bootstrap responses exclude both correct answers and evaluator notes. Save & next candidate, recommendations, and optional comments remain available.
+
+The canonical bank is `supabase/question_bank_005.json`. After editing it, regenerate the fresh-install seed and migration bank section:
+
+```bash
+python3 scripts/generate-question-bank.py
+python3 scripts/generate-question-bank.py --check
+python3 scripts/verify-question-bank.py
+bash scripts/check-db.sh
+npm run typecheck
+npm run lint
+npm run build
+```
+
+The database checks use a temporary local PostgreSQL instance, not your configured Supabase project. They cover bank composition, reapplication, active-test rejection, historical preservation, 30-minute new starts, long-answer persistence, scoring, and permissions.

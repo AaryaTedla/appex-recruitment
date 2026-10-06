@@ -1,3 +1,4 @@
+import { DESCRIPTIVE_ANSWER_LIMIT } from "@/lib/challengeLimits";
 import { NextResponse } from "next/server";
 import { getCandidateSession } from "@/lib/auth/candidate";
 import { submitAttempt } from "@/lib/challenge";
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const answers: Record<string, string> = {};
     if (body.answers && typeof body.answers === "object" && !Array.isArray(body.answers)) {
-      for (const [id, value] of Object.entries(body.answers)) answers[id] = String(value ?? "").slice(0, 500);
+      for (const [id, value] of Object.entries(body.answers)) answers[id] = String(value ?? "").slice(0, DESCRIPTIVE_ANSWER_LIMIT);
     }
     const supabase = createServiceClient();
     const { data: attempt, error } = await supabase.from("attempts").select("id,started_at")

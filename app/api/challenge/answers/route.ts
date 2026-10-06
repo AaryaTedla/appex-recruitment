@@ -1,3 +1,4 @@
+import { DESCRIPTIVE_ANSWER_LIMIT } from "@/lib/challengeLimits";
 import { NextResponse } from "next/server";
 import { getCandidateSession } from "@/lib/auth/candidate";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -14,7 +15,7 @@ export async function PUT(request: Request) {
       .eq("candidate_id", session.candidate.id).single();
     if (attemptError) throw attemptError;
     const { data, error } = await supabase.rpc("save_appex_answer", {
-      p_attempt_id: attempt.id, p_question_id: questionId, p_text: String(body.answerText ?? "").slice(0, 500),
+      p_attempt_id: attempt.id, p_question_id: questionId, p_text: String(body.answerText ?? "").slice(0, DESCRIPTIVE_ANSWER_LIMIT),
     });
     if (error) throw error;
     return NextResponse.json(data, { status: data.submitted ? 409 : 200 });

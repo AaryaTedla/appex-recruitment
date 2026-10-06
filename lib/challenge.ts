@@ -1,8 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/service";
 
 export function getChallengeConfig() {
-  const configured = Number(process.env.NEXT_PUBLIC_CHALLENGE_MINUTES || 15);
-  const minutes = Number.isFinite(configured) ? Math.max(1, Math.min(1440, configured)) : 15;
+  const configured = Number(process.env.NEXT_PUBLIC_CHALLENGE_MINUTES || 30);
+  const minutes = Number.isFinite(configured) ? Math.max(1, Math.min(1440, configured)) : 30;
   const enabled = process.env.NEXT_PUBLIC_CHALLENGE_TIMER_ENABLED !== "false";
   return { minutes, enabled };
 }
