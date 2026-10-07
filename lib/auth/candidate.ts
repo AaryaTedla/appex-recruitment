@@ -50,7 +50,7 @@ export async function getCandidateSession() {
   const supabase = createServiceClient();
   const { data: session, error } = await supabase
     .from("candidate_sessions")
-    .select("id,candidate_id,expires_at")
+    .select("id,candidate_id,expires_at,candidates(id,srn,full_name,status,created_at)")
     .eq("token_hash", hashToken(token))
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -58,13 +58,7 @@ export async function getCandidateSession() {
   if (error) throw error;
   if (!session) return null;
 
-  const { data: candidate, error: candidateError } = await supabase
-    .from("candidates")
-    .select("id,srn,full_name,status,created_at")
-    .eq("id", session.candidate_id)
-    .single();
-
-  if (candidateError) throw candidateError;
+  const candidate = Array.isArray(session.candidates) ? session.candidates[0] : session.candidates;
   if (!candidate) return null;
 
   return { session, candidate };

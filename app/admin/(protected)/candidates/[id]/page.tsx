@@ -1,3 +1,4 @@
+import { expireAttempts } from "@/lib/expireAttempts";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CandidateDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireEvaluator();
+  await expireAttempts();
   const { id } = await params;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) notFound();
   const supabase = createServiceClient();

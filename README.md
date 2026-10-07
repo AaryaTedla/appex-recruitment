@@ -389,3 +389,13 @@ Apply `supabase/migrations/007_simple_question.sql` after 006, then restart/rede
 Candidates see labeled MCQ/descriptive sections, separate navigator groups and review groups, answered counts, and suggested 12/18-minute pacing. A single 30-minute timer continues across section switching. After 12 minutes, a dismissible reminder appears if either descriptive answer is blank. Dismissal is saved per attempt in this browser; if browser storage is unavailable, dismissal lasts until reload. Both sections stay accessible until submission.
 
 The current source is `supabase/question_bank_007.json`. Generator and independent answer checks default to 007; older source versions remain available with `--version 005` or `--version 006`. Fresh installs use the current seed and migrations through 007; existing installations use migration 007.
+
+## Save reliability, expired attempts and navigation (008)
+
+Run `supabase/migrations/008_expire_attempts.sql` after 007 before deploying this update. Overview, candidates, evaluations and candidate details run a service-only expiry sweep before reading data, so abandoned timed tests become time-expired and available for evaluation. Untimed and unstarted attempts are untouched. This is lazy expiry on admin reads, not a scheduled background job.
+
+Autosaves coalesce pending writes, retry failures up to four times with exponential delays, retry when connectivity returns, and provide a manual retry button. Dirty drafts are backed up per attempt in this browser and restored on reload; backups clear on successful submission. Browser storage can be unavailable. Server deadlines still apply: unsaved text cannot be recovered into a submitted attempt after expiry, so do not ignore the unsaved-answer warning.
+
+Candidate sessions now load their candidate relationship in one database request. The challenge page supplies bootstrap data directly instead of repeating session/attempt queries in a browser bootstrap request. Admin middleware verifies JWT claims; pages/APIs retain authoritative user, email allowlist and profile-role checks. With asymmetric signing keys, verified claims can avoid an additional Auth round trip; symmetric signing still falls back to the Auth server.
+
+Deployment region and database latency still affect navigation. These source changes require a Vercel redeploy; the live deployment was not modified or benchmarked after this update. Set Vercel's function region close to your Supabase project using the actual project's region rather than guessing from applicant location.

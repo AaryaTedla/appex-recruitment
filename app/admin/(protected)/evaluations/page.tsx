@@ -1,3 +1,4 @@
+import { expireAttempts } from "@/lib/expireAttempts";
 import Link from "next/link";
 import { redirectToValidPage } from "@/lib/pagination";
 import { Card } from "@/components/ui/Card";
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EvaluationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireEvaluator();
+  await expireAttempts();
   const supabase = createServiceClient();
   const params = await searchParams;
   const rawPage = Number(params.page || 1);

@@ -14,7 +14,7 @@ const isMcq = (question: Question) => ["mcq", "code_output", "scenario_mcq", "tr
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-export function ChallengeClient({ candidateName }: { candidateName: string }) {
+export function ChallengeClient({ candidateName, initialData }: { candidateName: string; initialData?: ChallengeBootstrap }) {
   const router = useRouter();
   const [data, setData] = useState<ChallengeBootstrap | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -32,7 +32,10 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
   const answersRef = useRef<Record<string, string>>({});
   const submittingRef = useRef(false);
   const serverOffset = useRef(0);
-  const saveQueue = useRef(Promise.resolve());
+  const saveQueue = useRef(new Set<string>());
+  const draining = useRef(false);
+  const retries = useRef<Record<string, number>>({});
+  const attemptIdRef = useRef("");
   const dirtyQuestions = useRef(new Set<string>());
   const activeRef = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -43,9 +46,9 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     let active = true;
     (async () => {
       try {
-        const response = await fetch("/api/challenge/bootstrap", { cache: "no-store" });
-        const payload = await response.json();
-        if (!response.ok) {
+        const response = initialData ? null : await fetch("/api/challenge/bootstrap", { cache: "no-store" });
+        const payload = initialData || await response!.json();
+        if (response && !response.ok) {
           if (response.status === 409 && payload.submitted) {
             router.replace("/challenge/complete");
             return;
@@ -57,12 +60,25 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
           setFatalError("No active challenge questions are configured. Ask an APPEX admin to seed or activate the question bank.");
           return;
         }
+        attemptIdRef.current = payload.attempt.id;
         setData(payload);
         try { setReminderDismissed(localStorage.getItem(`appex-time-reminder:${payload.attempt.id}`) === "dismissed"); } catch { /* Storage may be unavailable. */ }
         serverOffset.current = new Date(payload.timer.serverNow).getTime() - Date.now();
         setIntegrityCount(payload.integrityCount || 0);
         answersRef.current = Object.fromEntries((payload.answers || []).map((answer: { question_id: string; answer_text: string }) => [answer.question_id, answer.answer_text]));
+        try {
+          const backup = JSON.parse(localStorage.getItem(`appex-draft:${payload.attempt.id}`) || "{}");
+          for (const q of payload.questions) {
+            if (typeof backup[q.id] === "string" && backup[q.id] !== answersRef.current[q.id]) {
+              answersRef.current[q.id] = backup[q.id].slice(0, DESCRIPTIVE_ANSWER_LIMIT);
+              dirtyQuestions.current.add(q.id);
+            }
+          }
+        } catch { /* Server answers remain available if local storage fails. */ }
         setAnswers(answersRef.current);
+        for (const id of dirtyQuestions.current) {
+          saveTimers.current[id] = setTimeout(() => enqueueSave(id), 0);
+        }
       } catch (error) {
         if (active) setFatalError(error instanceof Error ? error.message : "Could not load challenge.");
       } finally {
@@ -72,7 +88,9 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     return () => {
       active = false;
     };
-  }, [router]);
+    // Queued saves read the latest refs; changing answer state must not reload bootstrap.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, initialData]);
 
   useEffect(() => {
     activeRef.current = true;
@@ -81,6 +99,16 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
       activeRef.current = false;
       Object.values(timers).forEach(clearTimeout);
     };
+  }, []);
+
+  useEffect(() => {
+    const online = () => {
+      for (const id of dirtyQuestions.current) { retries.current[id] = 0; enqueueSave(id); }
+    };
+    window.addEventListener("online", online);
+    return () => window.removeEventListener("online", online);
+    // The queue consumes current refs, not captured answer state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const submitChallenge = useCallback(async (reason: "submitted" | "time_expired" = "submitted") => {
@@ -98,6 +126,7 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Submission failed.");
+      try { localStorage.removeItem(`appex-draft:${attemptIdRef.current}`); } catch { /* Optional backup. */ }
       router.replace("/challenge/complete");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Could not submit. Please try again.");
@@ -182,14 +211,48 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
       }
       if (!response.ok) throw new Error();
       if (!activeRef.current || submittingRef.current) return;
+      retries.current[questionId] = 0;
       if (answersRef.current[questionId] === value) dirtyQuestions.current.delete(questionId);
-      setSaveState(dirtyQuestions.current.size ? "saving" : "saved");
+      storeDraft();
+      const unresolvedFailure = [...dirtyQuestions.current].some((id) => (retries.current[id] || 0) > 0);
+      setSaveState(unresolvedFailure ? "error" : dirtyQuestions.current.size ? "saving" : "saved");
       window.setTimeout(() => {
         if (activeRef.current && !dirtyQuestions.current.size) setSaveState("idle");
       }, 1200);
     } catch {
+      if (!activeRef.current || submittingRef.current) return;
       setSaveState("error");
+      const retry = (retries.current[questionId] || 0) + 1;
+      retries.current[questionId] = retry;
+      if (retry <= 4) {
+        clearTimeout(saveTimers.current[questionId]);
+        saveTimers.current[questionId] = setTimeout(() => enqueueSave(questionId), Math.min(8000, 1000 * 2 ** (retry - 1)));
+      }
     }
+  }
+
+  function storeDraft() {
+    try {
+      localStorage.setItem(`appex-draft:${attemptIdRef.current}`, JSON.stringify(Object.fromEntries(
+        [...dirtyQuestions.current].map((id) => [id, answersRef.current[id] || ""]),
+      )));
+    } catch { /* Saving to the server still works without browser storage. */ }
+  }
+
+  function enqueueSave(id: string) {
+    if (!activeRef.current || submittingRef.current) return;
+    saveQueue.current.add(id);
+    if (draining.current) return;
+    draining.current = true;
+    void (async () => {
+      try {
+        while (saveQueue.current.size && activeRef.current && !submittingRef.current) {
+          const next = saveQueue.current.values().next().value!;
+          saveQueue.current.delete(next);
+          await persistAnswer(next, answersRef.current[next] || "");
+        }
+      } finally { draining.current = false; }
+    })();
   }
 
   function setAnswer(questionId: string, value: string, immediate = false) {
@@ -197,10 +260,12 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     answersRef.current = { ...answersRef.current, [questionId]: value };
     setAnswers(answersRef.current);
     dirtyQuestions.current.add(questionId);
+    retries.current[questionId] = 0;
+    storeDraft();
     setSaveState("saving");
     if (saveTimers.current[questionId]) clearTimeout(saveTimers.current[questionId]);
     const enqueue = () => {
-      saveQueue.current = saveQueue.current.then(() => persistAnswer(questionId, answersRef.current[questionId] || ""));
+      enqueueSave(questionId);
     };
     if (immediate) {
       enqueue();
@@ -311,6 +376,7 @@ export function ChallengeClient({ candidateName }: { candidateName: string }) {
     <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <ChallengeTopBar name={candidateName} secondsLeft={secondsLeft} saveState={saveState} integrityCount={integrityCount} />
         {timeReminder}
+      {saveState === "error" && <div role="alert" className="mt-4 rounded-xl border border-amber-500/30 p-4 text-sm text-amber-200">Some answers have not reached the server. Automatic retries are limited; keep this page open and retry if needed. Only server-saved answers count after the deadline.<Button className="mt-3" variant="secondary" onClick={() => { for (const id of dirtyQuestions.current) { retries.current[id] = 0; enqueueSave(id); } }}>Retry saves</Button></div>}
       {submitError && <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200"><p>{submitError} Your current answers are still here.</p><Button className="mt-3" disabled={submitting} onClick={() => void submitChallenge()}>Retry submission</Button></div>}
 
       <nav aria-label="Test sections" className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -381,7 +447,7 @@ function ChallengeTopBar({ name, secondsLeft, saveState, integrityCount }: { nam
       <div className="flex items-center gap-4">
         {integrityCount > 0 && <span>Integrity events: {integrityCount}</span>}
         <span role="status" className={saveState === "error" ? "text-red-300" : saveState === "saving" ? "text-amber-300" : "text-zinc-500"}>
-          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : saveState === "error" ? "Save failed — latest answers will retry on submit" : "Autosave on"}
+          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : saveState === "error" ? "Some answers not saved" : "Autosave on"}
         </span>
         {minutes != null && seconds != null && <span className="font-mono text-zinc-300">{minutes}:{String(seconds).padStart(2, "0")} remaining</span>}
       </div>

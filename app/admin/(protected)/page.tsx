@@ -1,3 +1,4 @@
+import { expireAttempts } from "@/lib/expireAttempts";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   await requireEvaluator();
+  await expireAttempts();
   const supabase = createServiceClient();
 
   const results = await Promise.all([

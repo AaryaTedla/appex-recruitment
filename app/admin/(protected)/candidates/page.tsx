@@ -1,3 +1,4 @@
+import { expireAttempts } from "@/lib/expireAttempts";
 import Link from "next/link";
 import { redirectToValidPage } from "@/lib/pagination";
 import Form from "next/form";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CandidatesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireEvaluator();
+  await expireAttempts();
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const status = typeof params.status === "string" ? params.status : "all";

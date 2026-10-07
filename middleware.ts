@@ -27,11 +27,11 @@ export async function middleware(request: NextRequest) {
   );
 
   const {
-    data: { user },
-  } = await timed("middleware authentication", () => supabase.auth.getUser());
+    data, error,
+  } = await timed("middleware authentication", () => supabase.auth.getClaims());
 
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  if (isAdminRoute && request.nextUrl.pathname !== "/admin/login" && !user) {
+  if (isAdminRoute && request.nextUrl.pathname !== "/admin/login" && (error || !data?.claims?.sub)) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     const redirect = NextResponse.redirect(url);
