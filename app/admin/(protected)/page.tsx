@@ -1,3 +1,5 @@
+import { TestAccessControl } from "@/components/admin/TestAccessControl";
+import { getTestAccess } from "@/lib/testAccess";
 import { expireAttempts } from "@/lib/expireAttempts";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -7,8 +9,8 @@ import { requireEvaluator } from "@/lib/auth/admin";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  await requireEvaluator();
-  await expireAttempts();
+  const identity = await requireEvaluator();
+  const [testOpen] = await Promise.all([identity.role === "admin" ? getTestAccess() : Promise.resolve(null), expireAttempts()]);
   const supabase = createServiceClient();
 
   const results = await Promise.all([
@@ -38,6 +40,7 @@ export default async function AdminDashboard() {
         <Link href="/admin/candidates" className="text-sm font-semibold text-violet-300 hover:text-violet-200">Review candidates →</Link>
       </div>
 
+      {testOpen != null && <TestAccessControl initialOpen={testOpen} key={String(testOpen)} />}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {metrics.map(([label, value]) => (
           <Card key={String(label)} className="p-5">

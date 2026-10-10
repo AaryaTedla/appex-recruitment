@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     }
     const supabase = createServiceClient();
     const { data: candidateId, error } = await supabase.rpc("register_appex_candidate", { p_srn: srn, p_full_name: fullName, p_online_registration_confirmed: body.onlineRegistrationConfirmed });
+    if (error?.message.includes("TEST_CLOSED")) return NextResponse.json({ error: "New tests are closed. Contact APPEX if you need help." }, { status: 403 });
     if (error?.message.includes("SRN_NAME_MISMATCH")) {
       return NextResponse.json({ error: "This SRN is already registered. Use the same full name as before, or contact APPEX." }, { status: 409 });
     }

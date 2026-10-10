@@ -1,3 +1,4 @@
+import { getTestAccess } from "@/lib/testAccess";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
@@ -5,7 +6,7 @@ import { getCandidateSession } from "@/lib/auth/candidate";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getChallengeConfig } from "@/lib/challenge";
 
-export default async function InstructionsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function InstructionsPage({ searchParams }: { searchParams: Promise<{ error?: string; closed?: string }> }) {
   const session = await getCandidateSession();
   if (!session) redirect("/register");
 
@@ -18,6 +19,7 @@ export default async function InstructionsPage({ searchParams }: { searchParams:
   const { count, error } = await supabase.from("questions").select("id", { count: "exact", head: true }).eq("is_active", true);
   if (error) throw error;
   const timer = getChallengeConfig();
+  const testOpen = await getTestAccess();
   const params = await searchParams;
 
   return (
@@ -38,8 +40,9 @@ export default async function InstructionsPage({ searchParams }: { searchParams:
           </div>
         </Card>
         {(params.error || !count) && <p role="alert" className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">{!count ? "The question bank is not ready yet. Contact APPEX before starting." : "We could not start the challenge. Please try again or contact APPEX."}</p>}
+        {!testOpen && <p role="status" className="mt-6 text-amber-200">New tests are closed. Contact APPEX if you need help.</p>}
         <form action="/api/candidate-status" method="post" className="mt-8">
-          <button disabled={!count} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-6 text-sm font-bold hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">Start Challenge</button>
+          <button disabled={!count || !testOpen} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-6 text-sm font-bold hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">Start Challenge</button>
         </form>
       </div>
     </main>

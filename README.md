@@ -399,3 +399,9 @@ Autosaves coalesce pending writes, retry failures up to four times with exponent
 Candidate sessions now load their candidate relationship in one database request. The challenge page supplies bootstrap data directly instead of repeating session/attempt queries in a browser bootstrap request. Admin middleware verifies JWT claims; pages/APIs retain authoritative user, email allowlist and profile-role checks. With asymmetric signing keys, verified claims can avoid an additional Auth round trip; symmetric signing still falls back to the Auth server.
 
 Deployment region and database latency still affect navigation. These source changes require a Vercel redeploy; the live deployment was not modified or benchmarked after this update. Set Vercel's function region close to your Supabase project using the actual project's region rather than guessing from applicant location.
+
+## Open/close test access (009)
+
+Run `supabase/migrations/009_test_access.sql` after 008, then redeploy. Access defaults to open on the first application; reapplying the migration preserves the selected state. Admins can use **Overview → Close test / Reopen test**. Evaluators cannot change availability.
+
+Closing blocks new registrations and unstarted attempts, including starts from stale instruction pages. Started applicants can continue saving, submit, or register again with their existing SRN/name to resume. Closing does not forcibly submit ongoing tests. The database setting is locked during registration/start to serialize these operations with the admin change. Public database roles cannot read or modify the settings table directly.

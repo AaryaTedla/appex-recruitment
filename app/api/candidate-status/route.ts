@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       const { error: startError } = await supabase.rpc("start_appex_attempt", {
         p_candidate_id: session.candidate.id, p_minutes: timer.minutes, p_timer_enabled: timer.enabled,
       });
+      if (startError?.message.includes("TEST_CLOSED")) return NextResponse.redirect(new URL("/challenge/instructions?closed=1", request.url), 303);
       if (startError) throw startError;
     }
 
